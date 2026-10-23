@@ -1,6 +1,6 @@
 /* Trening — service worker: powłoka aplikacji offline. Dane z api.github.com nie są tu buforowane
    (aplikacja trzyma własną kopię w pamięci przeglądarki), żeby nic prywatnego nie trafiało do cache. */
-const CACHE = 'trening-shell-v1';
+const CACHE = 'trening-shell-v2';
 const FONTS = 'trening-fonts-v1';
 const SHELL = ['./', 'index.html', 'styles.css', 'app.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png'];
 

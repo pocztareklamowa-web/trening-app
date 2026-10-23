@@ -999,7 +999,10 @@ function feedbackForm(s, fb) {
   saveBtn.addEventListener('click', async () => {
     if (!st.done && !st.rpe && !note.value.trim()) { msg.textContent = 'Zaznacz wykonanie, RPE albo dopisz notatkę.'; return; }
     saveBtn.disabled = true; msg.textContent = 'Zapisuję w repo…';
-    const entry = { date: s.date, title: [s.code, s.title].filter(Boolean).join(' '), done: st.done, rpe: st.rpe, note: note.value.trim() || null, saved: new Date().toISOString() };
+    // Jeśli nie wybrano statusu wykonania, a jest RPE lub notatka — traktuj sesję jako zrobioną.
+    // (Oceniasz trening = go zrobiłeś.) Jawny wybór "czesciowo"/"nie" zostaje nietknięty.
+    const done = st.done || ((st.rpe || note.value.trim()) ? 'tak' : null);
+    const entry = { date: s.date, title: [s.code, s.title].filter(Boolean).join(' '), done, rpe: st.rpe, note: note.value.trim() || null, saved: new Date().toISOString() };
     try {
       const next = await putJSON(`dane/feedback/${s._week}.json`, (cur) => {
         const f = cur && typeof cur === 'object' ? cur : { version: 1, week: s._week, entries: {} };
