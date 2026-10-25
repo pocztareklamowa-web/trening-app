@@ -215,6 +215,16 @@ function refuel(kcal) {
   if (kcal >= 350) return { carb: '50–70 g', prot: '25–35 g' };
   return { carb: '30–50 g', prot: '20–25 g' };
 }
+// Dzienne zapotrzebowanie: BMR (Mifflin-St Jeor) × czynnik aktywności (dzień poza treningiem) + koszt sesji.
+function dailyEnergy(sessionKcal) {
+  const b = state.index && state.index.body;
+  if (!b || !b.weight_kg || !b.height_cm || !b.age) return null;
+  const sx = String(b.sex || '').toLowerCase();
+  const corr = (sx.startsWith('k') || sx === 'f' || sx === 'w') ? -161 : 5;
+  const bmr = 10 * b.weight_kg + 6.25 * b.height_cm - 5 * b.age + corr;
+  const base = Math.round((bmr * (b.activity_factor || 1.3)) / 10) * 10;
+  return { base, total: Math.round((base + (sessionKcal || 0)) / 10) * 10 };
+}
 function energyBlock(s) {
   const en = sessionEnergy(s);
   if (!en) return document.createDocumentFragment();
@@ -227,13 +237,15 @@ function energyBlock(s) {
       el('li', {}, el('b', { text: 'Po treningu: ' }), 'koktajl (banan + 250 ml mleka + 50 g płatków + 150 g jogurtu / miarka odżywki) albo ryż 100 g + pierś 150 g + warzywa'),
       el('li', {}, el('b', { text: 'Obiad: ' }), 'ziemniaki / ryż / makaron + ryba / mięso / jajka + warzywa + oliwa'),
       el('li', {}, el('b', { text: 'Kolacja: ' }), 'twaróg lub jajka + pieczywo pełnoziarniste + warzywa lub owoc')));
+  const de = dailyEnergy(en.kcal);
   return el('div', { class: 'energy' },
     el('h2', { style: { marginTop: '18px' }, text: 'Energia i odżywianie' }),
     el('p', { class: 'energy-kcal' }, el('b', { text: `Wydatek sesji: ≈ ${en.kcal} kcal` }), en.kj ? el('span', { class: 'cue', text: ` (${en.kj} kJ pracy)` }) : null),
+    de ? el('p', { class: 'energy-kcal' }, el('b', { text: `Cel na ten dzień: ~${de.total} kcal` }), el('span', { class: 'cue', text: ` (baza ~${de.base} + sesja ~${en.kcal})` })) : null,
     el('p', { class: 'cue', text: 'Tyle ten trening dokłada ponad zwykły dzień — zjedz to z powrotem, zwłaszcza po długiej i po sesji jakościowej.' }),
     el('p', {}, `Zaraz po treningu (okno ~30–60 min): ~${rf.carb} węglowodanów + ${rf.prot} białka.`),
     meal,
-    el('p', { class: 'cue', text: 'To przykład, nie sztywna dieta — dostosuj do głodu i samopoczucia. Dokładny cel kcal na dzień policzę, jeśli podasz wzrost.' }));
+    el('p', { class: 'cue', text: 'To przykład, nie sztywna dieta — dostosuj do głodu i samopoczucia.' }));
 }
 function domainOf(p) { return DOMAINS.find((d) => p <= d.max) || DOMAINS[3]; }
 function cssVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
