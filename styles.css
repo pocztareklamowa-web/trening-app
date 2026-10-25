@@ -280,6 +280,11 @@ table.data th { color: var(--ink-2); font-weight: 500; }
 .ex-table td { padding: 8px 4px; border-top: 1px solid var(--line); vertical-align: top; }
 .ex-table td:nth-child(2) { white-space: nowrap; font-family: var(--font-num); font-weight: 600; }
 .ex-table .cue { color: var(--ink-2); font-size: 14px; }
+.ex-gallery { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 14px; }
+@media (min-width: 520px) { .ex-gallery { grid-template-columns: 1fr 1fr; } }
+.ex-fig { margin: 0; border: 1px solid var(--line); border-radius: 10px; padding: 10px; background: var(--card, transparent); }
+.ex-img { width: 100%; height: auto; display: block; }
+.ex-fig figcaption { margin-top: 6px; text-align: center; }
 
 /* formularz wykonania */
 fieldset { border: 0; padding: 0; margin: 14px 0 0; }

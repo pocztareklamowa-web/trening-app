@@ -636,6 +636,17 @@ async function fetchFile(path) {
   const res = await gh(path);
   return res.blob();
 }
+// Grafika ćwiczenia z prywatnego repo (SVG) — pobierz przez API i pokaż jako obraz.
+async function loadExerciseImg(imgEl, path) {
+  try {
+    const res = await gh(path);
+    const txt = await res.text();
+    imgEl.src = URL.createObjectURL(new Blob([txt], { type: 'image/svg+xml' }));
+  } catch (e) {
+    const fig = imgEl.closest('.ex-fig');
+    if (fig) fig.remove();
+  }
+}
 
 /* ---------------- widoki ---------------- */
 function render() {
@@ -972,6 +983,14 @@ function openSession(s) {
         el('td', {}, x.name, x.cue ? el('div', { class: 'cue', text: x.cue }) : null),
         el('td', { text: x.sets || '' }),
         el('td', { class: 'cue', text: x.rest || '' }))))));
+    const withImg = s.exercises.filter((x) => x.img);
+    if (withImg.length) {
+      parts.push(el('div', { class: 'ex-gallery' }, withImg.map((x) => {
+        const img = el('img', { class: 'ex-img', alt: x.name, loading: 'lazy' });
+        loadExerciseImg(img, x.img);
+        return el('figure', { class: 'ex-fig' }, img, el('figcaption', { class: 'cue', text: x.name }));
+      })));
+    }
   }
   const notes = [['Po co', s.why], ['Jak jechać', [s.hr_rpe, s.cadence && `kadencja ${s.cadence}`].filter(Boolean).join(', ')], ['Jedzenie', s.fueling], ['Odpuść, gdy', s.bailout], ['Na zewnątrz', s.outdoor]].filter(([, v]) => v);
   if (notes.length) parts.push(el('dl', { class: 'note-block' }, notes.flatMap(([k, v]) => [el('dt', { text: k }), el('dd', { text: v })])));
