@@ -196,6 +196,45 @@ function segments(session, ftp) {
     return flatten(parseTree(session.steps, ftp)).filter((s) => s.dur > 0).map((s) => { const seg = { ...s, t0: t, t1: t + s.dur }; t += s.dur; return seg; });
   } catch { return []; }
 }
+// Szacunkowy wydatek energetyczny sesji. Rower: praca z mocy (kJ ≈ kcal przy ~24% sprawności).
+// Siła: ~6 kcal/min. Inne z czasem. Zaokrąglone do 10 kcal.
+function sessionEnergy(s) {
+  const segs = segments(s, s._ftp);
+  if (segs.length && s._ftp) {
+    let joule = 0;
+    for (const g of segs) joule += ((g.p0 + g.p1) / 2) * s._ftp * g.dur;
+    const kj = Math.round(joule / 1000);
+    return { kcal: Math.round(kj / 10) * 10, kj };
+  }
+  if (s.exercises && s.exercises.length) return { kcal: Math.round(((s.duration_min || 40) * 6) / 10) * 10, kj: null };
+  if (s.duration_min) return { kcal: Math.round((s.duration_min * 8) / 10) * 10, kj: null };
+  return null;
+}
+function refuel(kcal) {
+  if (kcal >= 600) return { carb: '70–90 g', prot: '30–40 g' };
+  if (kcal >= 350) return { carb: '50–70 g', prot: '25–35 g' };
+  return { carb: '30–50 g', prot: '20–25 g' };
+}
+function energyBlock(s) {
+  const en = sessionEnergy(s);
+  if (!en) return document.createDocumentFragment();
+  const rf = refuel(en.kcal);
+  const meal = el('details', { class: 'meal' },
+    el('summary', { text: 'Przykładowy prosty jadłospis (dzień treningowy)' }),
+    el('ul', { class: 'meal-list' },
+      el('li', {}, el('b', { text: 'Śniadanie: ' }), 'owsianka 80 g płatków + mleko + banan + garść orzechów + miód'),
+      el('li', {}, el('b', { text: 'Przed treningiem (1–2 h): ' }), 'ryż lub makaron z czymś lekkostrawnym; krótko przed — banan albo baton'),
+      el('li', {}, el('b', { text: 'Po treningu: ' }), 'koktajl (banan + 250 ml mleka + 50 g płatków + 150 g jogurtu / miarka odżywki) albo ryż 100 g + pierś 150 g + warzywa'),
+      el('li', {}, el('b', { text: 'Obiad: ' }), 'ziemniaki / ryż / makaron + ryba / mięso / jajka + warzywa + oliwa'),
+      el('li', {}, el('b', { text: 'Kolacja: ' }), 'twaróg lub jajka + pieczywo pełnoziarniste + warzywa lub owoc')));
+  return el('div', { class: 'energy' },
+    el('h2', { style: { marginTop: '18px' }, text: 'Energia i odżywianie' }),
+    el('p', { class: 'energy-kcal' }, el('b', { text: `Wydatek sesji: ≈ ${en.kcal} kcal` }), en.kj ? el('span', { class: 'cue', text: ` (${en.kj} kJ pracy)` }) : null),
+    el('p', { class: 'cue', text: 'Tyle ten trening dokłada ponad zwykły dzień — zjedz to z powrotem, zwłaszcza po długiej i po sesji jakościowej.' }),
+    el('p', {}, `Zaraz po treningu (okno ~30–60 min): ~${rf.carb} węglowodanów + ${rf.prot} białka.`),
+    meal,
+    el('p', { class: 'cue', text: 'To przykład, nie sztywna dieta — dostosuj do głodu i samopoczucia. Dokładny cel kcal na dzień policzę, jeśli podasz wzrost.' }));
+}
 function domainOf(p) { return DOMAINS.find((d) => p <= d.max) || DOMAINS[3]; }
 function cssVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
 function mainTarget(segs) {
@@ -994,6 +1033,7 @@ function openSession(s) {
   }
   const notes = [['Po co', s.why], ['Jak jechać', [s.hr_rpe, s.cadence && `kadencja ${s.cadence}`].filter(Boolean).join(', ')], ['Jedzenie', s.fueling], ['Odpuść, gdy', s.bailout], ['Na zewnątrz', s.outdoor]].filter(([, v]) => v);
   if (notes.length) parts.push(el('dl', { class: 'note-block' }, notes.flatMap(([k, v]) => [el('dt', { text: k }), el('dd', { text: v })])));
+  if (s.kind !== 'rest') parts.push(energyBlock(s));
   const actions = el('div', { class: 'actions' });
   if (s.file) {
     actions.appendChild(el('button', { type: 'button', class: 'btn', onclick: () => downloadSession(s) }, icon('down'), 'Pobierz .zwo'));

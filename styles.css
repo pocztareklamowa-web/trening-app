@@ -285,6 +285,11 @@ table.data th { color: var(--ink-2); font-weight: 500; }
 .ex-fig { margin: 0; border: 1px solid var(--line); border-radius: 10px; padding: 10px; background: var(--card, transparent); }
 .ex-img { width: 100%; height: auto; display: block; }
 .ex-fig figcaption { margin-top: 6px; text-align: center; }
+.energy .energy-kcal { font-size: 16px; margin: 6px 0; }
+.meal { margin-top: 10px; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; }
+.meal summary { cursor: pointer; font-weight: 600; }
+.meal-list { margin: 10px 0 2px; padding-left: 18px; font-size: 15px; }
+.meal-list li { margin: 6px 0; }
 
 /* formularz wykonania */
 fieldset { border: 0; padding: 0; margin: 14px 0 0; }
