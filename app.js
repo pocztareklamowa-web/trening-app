@@ -435,6 +435,8 @@ function ftpNow() {
   return (p && (p.ftp_w || p.fallback_ftp_w)) || null;
 }
 function weightNow() {
+  const b = state.index && state.index.body;
+  if (b && b.weight_kg) return b.weight_kg; // bieżąca waga z index.json (aktualizowana na zmianę)
   const ws = state.historia && state.historia.weeks;
   const last = ws && [...ws].reverse().find((w) => w.weight_kg);
   return (last && last.weight_kg) || (state.profile && state.profile.weight_kg) || null;
